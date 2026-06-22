@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Сравнение поставщиков · FoodSuppliers{% endblock %}
+
+{% block content %}
+<a href="/" class="text-sm text-slate-500 hover:text-brand-700">← К каталогу</a>
+<h1 class="mt-2 text-2xl font-extrabold text-slate-900">Сравнение поставщиков</h1>
+
+{% if not suppliers %}
+<div class="mt-6 bg-white border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-500">
+  <p class="text-lg font-semibold text-slate-700">Не выбрано ни одного поставщика</p>
+  <p class="mt-1 text-sm">Вернитесь в <a href="/" class="text-brand-700 underline">каталог</a> и отметьте чекбоксом 2–4 поставщиков для сравнения.</p>
+</div>
+{% else %}
+
+<p class="text-slate-500 mt-1">Ключевые параметры выбранных поставщиков рядом — чтобы решить, с кем связаться.</p>
+
+<div class="mt-5 overflow-x-auto bg-white border border-slate-200 rounded-2xl">
+  <table class="w-full text-sm min-w-[640px]">
+    <thead>
+      <tr class="border-b border-slate-200 bg-slate-50">
+        <th class="text-left font-semibold text-slate-500 p-3 w-40">Параметр</th>
+        {% for s in suppliers %}
+        <th class="text-left font-bold text-slate-900 p-3">
+          <a href="/supplier/{{ s.id }}" class="hover:text-brand-700">{{ s.name }}</a>
+          <div class="text-[11px] font-normal text-slate-400 mt-0.5">
+            {{ s.category }}
+            {% if s.is_real %}
+            <span class="ml-1 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">● реальный</span>
+            {% else %}
+            <span class="ml-1 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">⚙ тестовый</span>
+            {% endif %}
+          </div>
+        </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      {% set rows = [
+        ('Город', 'city'),
+        ('Регион работы', 'regions'),
+        ('Мин. заказ', 'min_order'),
+        ('Цена', 'price'),
+        ('Сертификаты', 'certificates'),
+        ('Доставка', 'delivery'),
+        ('Комментарий', 'comment')
+      ] %}
+      {% for label, attr in rows %}
+      <tr>
+        <td class="p-3 text-slate-400 align-top">{{ label }}</td>
+        {% for s in suppliers %}
+        <td class="p-3 align-top text-slate-700">{{ s[attr] if s[attr] else '—' }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      <tr>
+        <td class="p-3 text-slate-400 align-top">Контакты</td>
+        {% for s in suppliers %}
+        <td class="p-3 align-top text-slate-700">
+          {% if s.phone %}{{ s.phone }}<br>{% endif %}
+          {% if s.website %}<a href="{{ s.website }}" target="_blank" rel="noopener" class="text-brand-700 hover:underline break-all">сайт</a>{% endif %}
+          {% if not s.phone and not s.website %}—{% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

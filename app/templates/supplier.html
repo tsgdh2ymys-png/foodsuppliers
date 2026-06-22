@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ s.name }} · FoodSuppliers{% endblock %}
+
+{% block content %}
+<a href="javascript:history.back()" class="text-sm text-slate-500 hover:text-brand-700">← Назад к каталогу</a>
+
+<div class="mt-3 grid gap-6 lg:grid-cols-3">
+  <!-- Основная карточка -->
+  <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <div class="flex flex-wrap gap-1.5 mb-2">
+          <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700">{{ s.category }}</span>
+          {% if s.is_real %}
+          <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">● реальный поставщик</span>
+          {% else %}
+          <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">⚙ тестовые (синтетические) данные</span>
+          {% endif %}
+        </div>
+        <h1 class="text-2xl font-extrabold text-slate-900">{{ s.name }}</h1>
+        <p class="text-slate-500 mt-1">📍 {{ s.city }}{% if s.regions %} · регион работы: {{ s.regions }}{% endif %}</p>
+      </div>
+      <form method="post" action="/supplier/{{ s.id }}/favorite">
+        <input type="hidden" name="next" value="/supplier/{{ s.id }}">
+        <button type="submit"
+          class="inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-sm font-semibold
+                 {{ 'border-amber-300 bg-amber-50 text-amber-600' if s.is_favorite else 'border-slate-300 text-slate-500 hover:border-amber-300 hover:text-amber-500' }}">
+          ★ {{ 'В избранном' if s.is_favorite else 'В избранное' }}
+        </button>
+      </form>
+    </div>
+
+    {% if s.description %}<p class="mt-4 text-slate-700 leading-relaxed">{{ s.description }}</p>{% endif %}
+
+    {% if s.comment %}
+    <div class="mt-4 rounded-lg bg-slate-50 border border-slate-200 px-4 py-3">
+      <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">💬 Комментарий</span>
+      <p class="mt-1 text-sm text-slate-700">{{ s.comment }}</p>
+    </div>
+    {% endif %}
+
+    <h3 class="mt-6 mb-2 text-sm font-bold text-slate-900 uppercase tracking-wide">Ключевая информация</h3>
+    <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+      {% macro row(label, value, empty='нет данных') %}
+        <div class="flex flex-col">
+          <dt class="text-xs text-slate-400">{{ label }}</dt>
+          <dd class="font-medium text-slate-800">{{ value if value else empty }}</dd>
+        </div>
+      {% endmacro %}
+      {{ row('Минимальный объём заказа', s.min_order) }}
+      {{ row('Примерная цена', s.price) }}
+      <div class="flex flex-col">
+        <dt class="text-xs text-slate-400">Документы / сертификаты</dt>
+        <dd class="font-medium {{ 'text-emerald-700' if s.has_certificates else 'text-slate-600' }}">
+          {% if s.certificates %}{{ s.certificates }}{% elif s.has_certificates is none %}нет данных{% else %}не указаны{% endif %}
+        </dd>
+      </div>
+      {{ row('Условия доставки', s.delivery) }}
+    </dl>
+  </div>
+
+  <!-- Контакты + заметки -->
+  <div class="space-y-6">
+    <div class="bg-white border border-slate-200 rounded-2xl p-6">
+      <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3">Контакты и источник</h3>
+      <ul class="space-y-2 text-sm">
+        {% if s.website %}<li>🌐 <a href="{{ s.website }}" target="_blank" rel="noopener" class="text-brand-700 hover:underline break-all">{{ s.website }}</a></li>{% endif %}
+        {% if s.phone %}<li>📞 <a href="tel:{{ s.phone }}" class="text-slate-700 hover:underline">{{ s.phone }}</a></li>{% endif %}
+        {% if s.email %}<li>✉️ <a href="mailto:{{ s.email }}" class="text-slate-700 hover:underline">{{ s.email }}</a></li>{% endif %}
+        {% if not s.website and not s.phone and not s.email %}<li class="text-slate-400">Контакты не указаны</li>{% endif %}
+      </ul>
+      <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500">
+        Источник:
+        {% if s.source.startswith('http') %}
+          <a href="{{ s.source }}" target="_blank" rel="noopener" class="text-brand-700 hover:underline break-all">{{ s.source }}</a>
+        {% else %}{{ s.source }}{% endif %}
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-6">
+      <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3">Мои заметки</h3>
+      <form method="post" action="/supplier/{{ s.id }}/notes">
+        <input type="hidden" name="next" value="/supplier/{{ s.id }}">
+        <textarea name="notes" rows="5" placeholder="Договорённости, цены из переписки, впечатления…"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">{{ s.notes }}</textarea>
+        <button type="submit" class="mt-2 w-full rounded-lg bg-slate-900 text-white text-sm font-semibold py-2 hover:bg-slate-800">Сохранить заметку</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

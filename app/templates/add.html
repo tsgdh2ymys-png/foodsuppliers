@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Добавить поставщика · FoodSuppliers{% endblock %}
+
+{% block content %}
+<a href="/" class="text-sm text-slate-500 hover:text-brand-700">← К каталогу</a>
+<h1 class="mt-2 text-2xl font-extrabold text-slate-900">Добавить поставщика</h1>
+<p class="text-slate-500 mt-1">Нашли поставщика сами? Сохраните его в базу, чтобы потом сравнить с другими.</p>
+
+<form method="post" action="/add" class="mt-5 bg-white border border-slate-200 rounded-2xl p-6 grid gap-4 sm:grid-cols-2 max-w-3xl">
+  {% macro field(name, label, ph='', req=false, type='text') %}
+  <div>
+    <label class="block text-xs font-semibold text-slate-500 mb-1">{{ label }}{% if req %} *{% endif %}</label>
+    <input type="{{ type }}" name="{{ name }}" placeholder="{{ ph }}" {{ 'required' if req else '' }}
+           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+  </div>
+  {% endmacro %}
+
+  {{ field('name', 'Название', 'ООО «Поставщик»', true) }}
+  <div>
+    <label class="block text-xs font-semibold text-slate-500 mb-1">Категория *</label>
+    <input list="cats" name="category" required placeholder="выберите или впишите"
+           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+    <datalist id="cats">{% for c in categories %}<option value="{{ c }}">{% endfor %}</datalist>
+  </div>
+  {{ field('city', 'Город', 'Москва') }}
+  {{ field('regions', 'Регион работы', 'ЦФО, доставка по РФ') }}
+
+  <div class="sm:col-span-2">
+    <label class="block text-xs font-semibold text-slate-500 mb-1">Описание</label>
+    <textarea name="description" rows="2" placeholder="Что поставляет, чем интересен"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
+  </div>
+
+  {{ field('website', 'Сайт', 'https://…') }}
+  {{ field('phone', 'Телефон', '+7 …') }}
+  {{ field('email', 'E-mail', 'opt@…') }}
+  <div></div>
+
+  {{ field('min_order', 'Мин. заказ (текст)', 'от 20 000 ₽') }}
+  {{ field('min_order_num', 'Мин. заказ (число, для скоринга)', '20000') }}
+  {{ field('price', 'Цена (текст)', '≈ 180 ₽/кг') }}
+  {{ field('price_num', 'Цена (число, для скоринга)', '180') }}
+
+  {{ field('certificates', 'Документы / сертификаты', 'ГОСТ, ТР ТС…') }}
+  {{ field('delivery', 'Условия доставки', 'Доставка по Москве 1–2 дня') }}
+
+  <label class="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" name="has_certificates" class="h-4 w-4 accent-brand-600"> Есть документы/сертификаты</label>
+  <label class="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" name="has_delivery" class="h-4 w-4 accent-brand-600"> Есть доставка</label>
+
+  <div class="sm:col-span-2 flex gap-3 pt-2">
+    <button type="submit" class="rounded-lg bg-brand-600 text-white font-semibold px-5 py-2.5 hover:bg-brand-700">Сохранить</button>
+    <a href="/" class="rounded-lg border border-slate-300 text-slate-600 font-semibold px-5 py-2.5 hover:bg-slate-50">Отмена</a>
+  </div>
+</form>
+{% endblock %}

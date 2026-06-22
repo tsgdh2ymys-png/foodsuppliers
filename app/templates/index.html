@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Каталог поставщиков · FoodSuppliers{% endblock %}
+
+{% block content %}
+<section class="mb-5">
+  <h1 class="text-2xl font-extrabold text-slate-900">Поиск поставщиков продуктов питания</h1>
+  <p class="text-slate-500 mt-1">Ищите по категории и городу, собирайте ключевую информацию и сравнивайте, с кем выгоднее работать.</p>
+  <p class="mt-3 inline-flex items-start gap-2 rounded-lg bg-slate-100 text-slate-500 text-xs px-3 py-2">
+    <span aria-hidden="true">ℹ️</span>
+    <span>Демо-режим: регистрация намеренно не сделана, чтобы не усложнять проверку — все функции доступны сразу. Избранное и заметки общие.</span>
+  </p>
+</section>
+
+<!-- Фильтры -->
+<form method="get" action="/" class="bg-white border border-slate-200 rounded-2xl p-4 mb-4 grid gap-3 md:grid-cols-12 items-end">
+  <div class="md:col-span-5">
+    <label class="block text-xs font-semibold text-slate-500 mb-1">Поиск</label>
+    <input type="text" name="q" value="{{ q }}" placeholder="название, товар, ключевое слово"
+           class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+  </div>
+  <div class="md:col-span-4">
+    <label class="block text-xs font-semibold text-slate-500 mb-1">Категория товара</label>
+    <select name="category" class="w-full rounded-lg border border-slate-300 px-3 py-2 bg-white focus:ring-2 focus:ring-brand-500 outline-none">
+      <option value="">Все категории</option>
+      {% for c in categories %}
+      <option value="{{ c }}" {{ 'selected' if c == category else '' }}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="md:col-span-3">
+    <label class="block text-xs font-semibold text-slate-500 mb-1">Город</label>
+    <select name="city" class="w-full rounded-lg border border-slate-300 px-3 py-2 bg-white focus:ring-2 focus:ring-brand-500 outline-none">
+      <option value="">Все города</option>
+      {% for c in cities %}
+      <option value="{{ c }}" {{ 'selected' if c == city else '' }}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="md:col-span-5">
+    <label class="block text-xs font-semibold text-slate-500 mb-1">Тип данных</label>
+    <select name="kind" class="w-full rounded-lg border border-slate-300 px-3 py-2 bg-white focus:ring-2 focus:ring-brand-500 outline-none">
+      <option value="" {{ 'selected' if kind == '' else '' }}>Все поставщики</option>
+      <option value="real" {{ 'selected' if kind == 'real' else '' }}>● Только реальные (с источником)</option>
+      <option value="demo" {{ 'selected' if kind == 'demo' else '' }}>⚙ Только тестовые (синтетика)</option>
+    </select>
+  </div>
+  <div class="md:col-span-4">
+    <label class="block text-xs font-semibold text-slate-500 mb-1">Сортировка</label>
+    <select name="sort" class="w-full rounded-lg border border-slate-300 px-3 py-2 bg-white focus:ring-2 focus:ring-brand-500 outline-none">
+      <option value="relevance" {{ 'selected' if sort == 'relevance' else '' }}>По релевантности</option>
+      <option value="price" {{ 'selected' if sort == 'price' else '' }}>Цена ↑</option>
+      <option value="min_order" {{ 'selected' if sort == 'min_order' else '' }}>Мин. заказ ↑</option>
+    </select>
+  </div>
+  <div class="md:col-span-3">
+    <button type="submit" class="w-full rounded-lg bg-brand-600 text-white font-semibold px-3 py-2 hover:bg-brand-700">Найти</button>
+  </div>
+  {% if only_fav %}<input type="hidden" name="only_fav" value="1">{% endif %}
+</form>
+
+<!-- Легенда: что значат бейджи -->
+<div class="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
+  <span class="font-semibold text-slate-600">Обозначения:</span>
+  <a href="/?kind=real" class="inline-flex items-center gap-1.5 hover:text-emerald-700">
+    <span class="font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">● реальный</span>
+    настоящий поставщик со ссылкой-источником — <b class="text-slate-700">{{ real_total }}</b>
+  </a>
+  <a href="/?kind=demo" class="inline-flex items-center gap-1.5 hover:text-slate-700">
+    <span class="font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">⚙ тестовый</span>
+    синтетические данные для демонстрации — <b class="text-slate-700">{{ demo_total }}</b>
+  </a>
+</div>
+
+<div class="flex items-center justify-between mb-3">
+  <p class="text-sm text-slate-500">
+    Найдено: <b class="text-slate-800">{{ total }}</b>
+    {% if only_fav %}<span class="ml-2 text-brand-700 font-semibold">· показаны только избранные</span>{% endif %}
+    {% if q or category or city or kind or only_fav %}
+      <a href="/" class="ml-2 underline hover:text-brand-700">сбросить фильтры</a>{% endif %}
+  </p>
+  <p class="text-xs text-slate-400">Отметьте карточки чекбоксом, чтобы сравнить →</p>
+</div>
+
+<!-- Результаты -->
+{% if suppliers %}
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  {% for s in suppliers %}
+  <article id="s{{ s.id }}" class="card-hover scroll-mt-24 bg-white border border-slate-200 rounded-2xl p-4 flex flex-col">
+    <div class="flex items-start justify-between gap-2">
+      <div>
+        <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700">{{ s.category }}</span>
+        {% if s.is_real %}
+        <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800" title="Реальный поставщик — есть ссылка на первоисточник">● реальный</span>
+        {% else %}
+        <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800" title="Синтетические (тестовые) данные для демонстрации">⚙ тестовый</span>
+        {% endif %}
+      </div>
+      <label class="shrink-0 cursor-pointer inline-flex items-center gap-1 text-xs text-slate-400">
+        <input type="checkbox" class="cmp h-4 w-4 accent-brand-600" value="{{ s.id }}" data-name="{{ s.name }}">
+        <span class="hidden sm:inline">сравнить</span>
+      </label>
+    </div>
+
+    <h2 class="mt-2 font-bold text-slate-900 leading-snug">
+      <a href="/supplier/{{ s.id }}" class="hover:text-brand-700">{{ s.name }}</a>
+    </h2>
+    <p class="text-xs text-slate-500 mt-0.5">📍 {{ s.city }}{% if s.regions %} · {{ s.regions }}{% endif %}</p>
+    <p class="text-sm text-slate-600 mt-2 line-clamp-3">{{ s.description }}</p>
+
+    <dl class="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+      <div><dt class="text-slate-400">Мин. заказ</dt><dd class="font-medium text-slate-700">{{ s.min_order or '—' }}</dd></div>
+      <div><dt class="text-slate-400">Цена</dt><dd class="font-medium text-slate-700">{{ s.price or '—' }}</dd></div>
+      <div><dt class="text-slate-400">Сертификаты</dt>
+        <dd class="font-medium {{ 'text-emerald-700' if s.has_certificates else ('text-slate-400' if s.has_certificates is none else 'text-slate-500') }}">
+          {% if s.has_certificates %}есть{% elif s.has_certificates is none %}нет данных{% else %}нет{% endif %}</dd></div>
+      <div><dt class="text-slate-400">Доставка</dt>
+        <dd class="font-medium {{ 'text-emerald-700' if s.has_delivery else ('text-slate-400' if s.has_delivery is none else 'text-slate-500') }}">
+          {% if s.has_delivery %}есть{% elif s.has_delivery is none %}нет данных{% else %}нет{% endif %}</dd></div>
+    </dl>
+
+    {% if s.comment %}<p class="mt-2 text-xs text-slate-500 italic line-clamp-2">💬 {{ s.comment }}</p>{% endif %}
+
+    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+      <a href="/supplier/{{ s.id }}" class="text-sm font-semibold text-brand-700 hover:underline">Подробнее →</a>
+      <form method="post" action="/supplier/{{ s.id }}/favorite">
+        <input type="hidden" name="next" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}#s{{ s.id }}">
+        <button type="submit" title="{{ 'Убрать из избранного' if s.is_favorite else 'В избранное' }}"
+          class="text-lg leading-none {{ 'text-amber-400' if s.is_favorite else 'text-slate-300 hover:text-amber-400' }}">★</button>
+      </form>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="bg-white border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-500">
+  <p class="text-lg font-semibold text-slate-700">Ничего не найдено</p>
+  <p class="mt-1 text-sm">Попробуйте изменить фильтры или <a href="/" class="text-brand-700 underline">сбросить поиск</a>.</p>
+</div>
+{% endif %}
+
+<!-- Плавающая панель сравнения -->
+<div id="compare-bar" class="fixed bottom-0 inset-x-0 z-30 translate-y-full transition-transform duration-200">
+  <div class="max-w-6xl mx-auto px-4 pb-4">
+    <div class="bg-slate-900 text-white rounded-2xl shadow-2xl px-4 py-3 flex items-center justify-between gap-3">
+      <span class="text-sm"><b id="cmp-count">0</b> выбрано для сравнения</span>
+      <div class="flex items-center gap-2">
+        <button id="cmp-clear" class="text-xs text-slate-300 hover:text-white px-2 py-1">очистить</button>
+        <a id="cmp-go" href="#" class="text-sm font-semibold bg-brand-500 hover:bg-brand-600 rounded-lg px-4 py-2">Сравнить →</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
